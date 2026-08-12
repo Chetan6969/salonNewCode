@@ -66,16 +66,17 @@ app.post('/api/booking-notification', async (req, res) => {
   const logs = [];
   const servicesText = services.map(s => s.name).join(', ');
 
-  // A. Process Email Delivery (to salon, with client in BCC/CC)
+  // A. Process Email Delivery (to salon & customer separately)
   let emailStatus = 'simulated';
   let emailMsg = '';
 
   if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    const htmlBody = `
+    // 1. Compile Salon Admin Alert HTML
+    const adminHtmlBody = `
       <div style="font-family: sans-serif; background-color: #121214; color: #f5f5f7; padding: 30px; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #1a1a1a;">
         <div style="text-align: center; border-bottom: 1px dashed #333; padding-bottom: 20px; margin-bottom: 20px;">
-          <h2 style="color: #ffffff; font-family: serif; letter-spacing: 0.15em; margin: 0;">HE & SHE SALON</h2>
-          <span style="font-size: 10px; color: #a0a0a0; tracking: 0.25em;">PREMIUM UNISEX GROOMING PASS</span>
+          <h2 style="color: #ffffff; font-family: serif; letter-spacing: 0.15em; margin: 0;">HE & SHE HAIRFIX</h2>
+          <span style="font-size: 10px; color: #a0a0a0; tracking: 0.25em;">NEW APPOINTMENT ALERT</span>
         </div>
         <p style="font-size: 14px; color: #a0a0a0; line-height: 1.6;">
           Hello Team, a new unisex grooming appointment has been booked. Details are compiled below:
@@ -114,30 +115,94 @@ app.post('/api/booking-notification', async (req, res) => {
             <td style="padding: 12px 0 8px 0; color: #ffffff; font-weight: bold; font-size: 15px;">₹${grandTotal}</td>
           </tr>
         </table>
-        <div style="text-align: center; border-t: 1px solid #111; pt-15; font-size: 11px; color: #555;">
+        <div style="text-align: center; border-top: 1px solid #222; padding-top: 15px; font-size: 11px; color: #555;">
           This is an automated notification. Please make sure the stylist is ready at the scheduled hour.
         </div>
       </div>
     `;
 
+    // 2. Compile Customer Receipt HTML
+    const clientHtmlBody = `
+      <div style="font-family: sans-serif; background-color: #121214; color: #f5f5f7; padding: 30px; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #1a1a1a;">
+        <div style="text-align: center; border-bottom: 1px dashed #333; padding-bottom: 20px; margin-bottom: 20px;">
+          <h2 style="color: #ffffff; font-family: serif; letter-spacing: 0.15em; margin: 0;">HE & SHE HAIRFIX</h2>
+          <span style="font-size: 10px; color: #a0a0a0; tracking: 0.25em;">OFFICIAL BOOKING CONFIRMATION</span>
+        </div>
+        <p style="font-size: 14px; color: #ffffff; font-weight: 500;">
+          Dear ${clientName},
+        </p>
+        <p style="font-size: 13px; color: #a0a0a0; line-height: 1.6;">
+          Your unisex grooming session has been successfully locked. Below are your booking ticket details:
+        </p>
+        <div style="background-color: #1c1c1f; border: 1px solid #2a2a30; padding: 20px; border-radius: 6px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #f5f5f7;">
+            <tr>
+              <td style="padding: 6px 0; color: #666666; font-weight: bold; width: 35%;">BOOKING REF:</td>
+              <td style="padding: 6px 0; color: #ffffff; font-weight: bold;">${bookingRef}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #666666; font-weight: bold;">DATE & TIME:</td>
+              <td style="padding: 6px 0; color: #ffffff; font-weight: bold;">${bookingDate} @ ${bookingTime}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #666666; font-weight: bold;">STYLIST:</td>
+              <td style="padding: 6px 0; color: #ffffff;">${stylist}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #666666; font-weight: bold;">SERVICES:</td>
+              <td style="padding: 6px 0; color: #ffffff;">${servicesText}</td>
+            </tr>
+            <tr style="border-top: 1px solid #333;">
+              <td style="padding: 10px 0 0 0; color: #a0a0a0; font-weight: bold;">TOTAL BILL:</td>
+              <td style="padding: 10px 0 0 0; color: #10b981; font-weight: bold; font-size: 15px;">₹${grandTotal}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="border-top: 1px solid #222; padding-top: 15px; margin-top: 20px; font-size: 12px; color: #8e8e93; line-height: 1.5;">
+          <strong style="color: #ffffff;">HE & SHE HAIRFIX UNISEX SALON</strong><br />
+          📍 HIG 16 Bharhut Nagar Satna, Madhya Pradesh, 485441<br />
+          📞 Call: +91 6266979583<br />
+          ✉️ Support: ${process.env.EMAIL_USER}
+        </div>
+        <p style="font-size: 11px; color: #555; text-align: center; margin-top: 25px; border-top: 1px dashed #222; padding-top: 10px;">
+          Please show this digital confirmation ticket at the reception desk on arrival. We look forward to grooming you!
+        </p>
+      </div>
+    `;
+
     try {
-      await transporter.sendMail({
-        from: `"He & She Salon Notifications" <${process.env.EMAIL_USER}>`,
-        to: process.env.EMAIL_USER, // Sends email to salon email itself
-        cc: clientEmail, // Copies client
-        subject: `New Booking Confirmed - Ref: ${bookingRef} (${clientName})`,
-        html: htmlBody
+      // Dispatch 1: To Salon Admin (copy to themselves)
+      const adminMailPromise = transporter.sendMail({
+        from: `"He & She Salon Alerts" <${process.env.EMAIL_USER}>`,
+        to: process.env.EMAIL_USER,
+        subject: `[New Booking Alert] Ref: ${bookingRef} - ${clientName}`,
+        html: adminHtmlBody
       });
+
+      // Dispatch 2: To Customer (direct recipient)
+      let clientMailPromise = Promise.resolve();
+      if (clientEmail && clientEmail.includes('@')) {
+        clientMailPromise = transporter.sendMail({
+          from: `"He & She Hairfix" <${process.env.EMAIL_USER}>`,
+          to: clientEmail,
+          subject: `Booking Confirmed! Ref: ${bookingRef} (He & She Hairfix)`,
+          html: clientHtmlBody
+        });
+      }
+
+      // Execute concurrently
+      await Promise.all([adminMailPromise, clientMailPromise]);
+      
       emailStatus = 'success';
-      emailMsg = `Nodemailer successfully dispatched confirmation email to ${process.env.EMAIL_USER}`;
+      emailMsg = `Emails successfully dispatched to both Salon (${process.env.EMAIL_USER}) and Customer (${clientEmail || 'N/A'})`;
       console.log(emailMsg);
     } catch (err) {
       emailStatus = 'error';
-      emailMsg = `Nodemailer failed to send email: ${err.message}`;
+      emailMsg = `Nodemailer dispatch failed: ${err.message}`;
       console.error(emailMsg);
     }
   } else {
-    emailMsg = `[Simulated Nodemailer Email] Would send booking receipt to heandshehairfixsalon@gmail.com. App Password is not defined.`;
+    emailMsg = `[Simulated Nodemailer Email] Staging credentials not fully defined. Custom receipts would dispatch to both Admin and Client.`;
     console.log(emailMsg);
   }
   logs.push({ type: 'email', status: emailStatus, message: emailMsg });
