@@ -4,7 +4,7 @@ import { Scissors, Phone, MapPin, Mail, Clock } from 'lucide-react';
 
 export default function Footer() {
   const navigate = useNavigate();
-  const salonLocation = import.meta.env.VITE_SALON_LOCATION || 'HIG 16 Bharhut Nagar Satna, Madhya Pradesh, 485441';
+  const salonLocation = import.meta.env.VITE_SALON_LOCATION || 'Gali No. 10, Rajendra Nagar Rd, Satna, Madhya Pradesh, 485001';
   const salonPhone = import.meta.env.VITE_SALON_PHONE || '+91 6266979583';
   const salonEmail = import.meta.env.VITE_SALON_EMAIL || 'heandshehairfixsalon@gmail.com';
 

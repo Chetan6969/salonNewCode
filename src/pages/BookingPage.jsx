@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, User, CheckCircle2, ChevronRight, ChevronLeft, Sparkles, Moon, ArrowLeft, Settings, Mail, MessageSquare, Check, AlertCircle, X } from 'lucide-react';
-import { servicesData } from '../components/Services';
+import { servicesData, bodySpaData } from '../components/Services';
 import { sendBookingNotifications, getNotificationConfig, saveNotificationConfig } from '../services/notificationService';
 
 const STYLISTS = [
@@ -53,8 +53,11 @@ export default function BookingPage() {
     setSettingsConfig(getNotificationConfig());
   }, []);
 
-  // Extract all services flat for easy search
-  const flatServices = servicesData.reduce((acc, cat) => [...acc, ...cat.items], []);
+  // All bookable categories (regular services + body spa), with numeric prices only
+  const allCategories = [...servicesData, ...bodySpaData];
+  const flatServices = allCategories
+    .reduce((acc, cat) => [...acc, ...cat.items], [])
+    .filter((s) => typeof s.price === 'number');
 
   // Handle service pre-population from router state
   useEffect(() => {
@@ -204,12 +207,12 @@ export default function BookingPage() {
                   Choose Unisex Treatments
                 </h4>
                 <div className="flex flex-col gap-4 max-h-[380px] overflow-y-auto pr-1">
-                  {servicesData.map((category) => (
+                  {allCategories.map((category) => (
                     <div key={category.category} className="flex flex-col gap-2">
                       <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider mb-1">
                         {category.category}
                       </span>
-                      {category.items.map((service) => {
+                      {category.items.filter(s => typeof s.price === 'number').map((service) => {
                         const isChecked = selectedServices.some(s => s.id === service.id);
                         return (
                           <div 

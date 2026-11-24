@@ -160,7 +160,7 @@ app.post('/api/booking-notification', async (req, res) => {
         </div>
         <div style="border-top: 1px solid #222; padding-top: 15px; margin-top: 20px; font-size: 12px; color: #8e8e93; line-height: 1.5;">
           <strong style="color: #ffffff;">HE & SHE HAIRFIX UNISEX SALON</strong><br />
-          📍 HIG 16 Bharhut Nagar Satna, Madhya Pradesh, 485441<br />
+          📍 Gali No. 10, Rajendra Nagar Rd, Satna, Madhya Pradesh, 485001<br />
           📞 Call: +91 6266979583<br />
           ✉️ Support: ${process.env.EMAIL_USER}
         </div>

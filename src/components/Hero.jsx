@@ -283,7 +283,7 @@ export default function Hero({ onStartScan, onOpenBooking }) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#121214]/90 via-[#121214]/30 to-transparent flex flex-col justify-end p-4 text-left">
                 <span className="text-[0.55rem] text-white/40 tracking-widest uppercase font-semibold">PREMIUM BOUTIQUE</span>
-                <span className="text-xs text-white font-semibold mt-0.5">Gurugram Styling Lounge</span>
+                <span className="text-xs text-white font-semibold mt-0.5">Satna Styling Lounge</span>
               </div>
             </div>
 
