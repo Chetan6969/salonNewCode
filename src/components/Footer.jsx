@@ -4,7 +4,7 @@ import { Scissors, Phone, MapPin, Mail, Clock } from 'lucide-react';
 
 export default function Footer() {
   const navigate = useNavigate();
-  const salonLocation = import.meta.env.VITE_SALON_LOCATION || 'Gali No. 10, Rajendra Nagar Rd, Satna, Madhya Pradesh, 485001';
+  const salonLocation = 'Gali No. 10, Rajendra Nagar Rd, Satna, Madhya Pradesh, 485001';
   const salonPhone = import.meta.env.VITE_SALON_PHONE || '+91 6266979583';
   const salonEmail = import.meta.env.VITE_SALON_EMAIL || 'heandshehairfixsalon@gmail.com';
 
@@ -92,7 +92,7 @@ export default function Footer() {
           <h4 className="font-bold text-xs tracking-wider text-white uppercase mb-2">Opening Hours</h4>
           <div className="flex items-center gap-2 text-xs">
             <Clock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-            <span>Monday - Sunday: 9:00 AM - 11:00 PM</span>
+            <span>Monday - Sunday: 9:00 AM - 9:00 PM</span>
           </div>
           <span className="text-[0.65rem] text-[#666666] leading-relaxed mt-2 block border-l border-white/10 pl-2">
             Late shift rules: A 25% staff surcharge is appended to booking entries scheduled after 8:00 PM.
